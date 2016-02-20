@@ -1,2 +1,2 @@
 # Juego_Contra-atacando
-Proyecto de desaro
+Proyecto de desarrollo de videojuegos / Grupo 1 / Enero - Mayo 2016
