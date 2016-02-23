@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import javax.swing.JFrame;
 import java.io.IOException;
+import java.util.LinkedList;
 
 /**
  *
@@ -46,27 +47,37 @@ import java.io.IOException;
 public class Juego_ContraAtacando extends JFrame implements Runnable,
         KeyListener {
     
-    private static int iWidth; // Ancho del JFrame
-    private static int iHeight; // Alto del JFrame
-    private int iVidas; // Cantidad de vidas
-    private int iScore; // Cantidad de puntos
-    private Image imaImagenPrincipal; // Imagen del peronsaje principal
-    private Image imaImagenCopos; // Imagen de los copos de nieve
-    // Imagen de los disparos del personaje principal
-    private Image imaImagenDisparo;
-    private Image imaImagenVida1; // Imagen de 1 corazon de vida
-    private Image imaImagenVida2; // Imagen de 2 corazones de vida
-    private Image imaImagenVida3; // Imagen de 3 corazones de vida
-    private Image imaImagenVida4; // Imagen de 4 corazones de vida
-    private Image imaImagenVida5; // Imagen de 5 corazones de vida
-    private Image imaImagenFondo; // Imagen de fondo
-    private SoundClip Derretir; // Sonido de copo de nieve derretido
-    private SoundClip Boom; // Sonido de copo de nieve estrellado en la tierra
+    private static int iWidth;
+    private static int iHeight;
+    private int iVidas;
     
     /* objetos para manejar el buffer del JFrame y 
        que la imagen no parpadee */
     private Image    imaImagenJFrame;   // Imagen a proyectar en JFrame
     private Graphics graGraficaJFrame;  // Objeto grafico de la Imagen
+    
+    //Imagen de Jugador
+    private Image imaJugador;
+    
+    //Imagen del Disparo
+    private Image imaDisparo;
+    
+    //Base de Jugador
+    private Base basJugador; // Objeto Base del Jugador Principal
+    
+    //Base de Disparo
+    private Base basDisparo; // Objeto Disparo
+    
+    //Lista de Disparos
+    private LinkedList lklDisparos = new LinkedList();
+    
+    //Direccion del Jugador
+    private int iDireccion = 0;
+    
+    //Bandera para controlar Disparos
+    private boolean bisShooting = false;
+    private boolean bAllowShoot = true;
+    
     
     /** 
      * Constructor
@@ -97,10 +108,27 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
      * 
      */
     public void init() {
+        
         // Empieza con 5 vidas
         iVidas = 5;
+        
         // Dar click en el Applet para poder usar las teclas
         addKeyListener(this);
+        
+        //Definir la Imagen del Jugador
+        imaJugador =  Toolkit.getDefaultToolkit().getImage(this.getClass().
+               getResource("Principal.gif"));
+        
+        //Definir la Imagen de los Disparos
+        imaDisparo = Toolkit.getDefaultToolkit().getImage(this.getClass().
+               getResource("Disparo.gif"));
+        
+        //Definir el Jugador con su Imagen
+        basJugador = new Base (0,0,imaJugador);
+        
+        //Inicializa Pos del Jugador
+       PosInicialJugador(basJugador); 
+        
     }
     
     /** 
@@ -154,6 +182,39 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
      */
     public void actualiza(){
         
+        //Si la direccion del personaje es 1->Derecha
+        if(iDireccion == 1) {
+            
+            //Muevelo a la derecha
+            basJugador.setX(basJugador.getX()+3);
+        }
+        //Si la direccion del personaje es 2->Izquierda
+        else if(iDireccion == 2) {
+            
+            //Muevelo a la Izquierda
+            basJugador.setX(basJugador.getX()-3);
+        }
+        
+        //Si el usuario Disparo
+        if(bisShooting) {
+            
+            //Crea el Disparo
+            CrearDisparo();
+            //Actualiza al Bandera de Disparo
+            bisShooting = false;
+        }
+        
+        //Actualiza el Movimiento de los Disparos Existentes
+        for(int iI = 0; iI<lklDisparos.size();iI++) {
+            
+            Base basInstance = (Base) lklDisparos.get(iI);
+            
+            if(true /* basInstance.getDispDir()==0*/) {
+              
+                basInstance.setY(basInstance.getY()-2);
+            }
+            
+        }
     }
     
     /**
@@ -179,7 +240,7 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
      */
     public void paint(Graphics graGrafico){
         // Inicializan el DoubleBuffer
-        if (imaImagenJFrame == null){
+        if (imaImagenJFrame == null) {
                 imaImagenJFrame = createImage (this.getSize().width, 
                         this.getSize().height);
                 graGraficaJFrame = imaImagenJFrame.getGraphics ();
@@ -214,6 +275,30 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
      */
     public void paint1(Graphics graDibujo) {
         
+        if(iVidas>0) {
+            
+            if(basJugador != null) {
+                
+                //Dibuja al Principal
+                basJugador.paint(graDibujo,this);
+            }
+            
+            //Si la Lista no esta vacia
+            if(lklDisparos != null) {
+                
+                //Dibuja todos los Disparos
+                for(int iI = 0; iI<lklDisparos.size();iI++) {
+                    
+                    //Tomar Instancia de la Lista
+                    Base basInstancia = (Base) lklDisparos.get(iI);
+                    
+                    //Dibuja la Instancia
+                    basInstancia.paint(graDibujo, this);
+                    
+                }
+            }
+                
+        }
     }
     
     @Override
@@ -223,11 +308,42 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
     @Override
     public void keyPressed(KeyEvent keyEvent) {
         
+        //Si el Usuario presiona la tecla Derecha
+        if(keyEvent.getKeyCode() == keyEvent.VK_RIGHT) 
+        {
+            //Has la direccion del Jugador a la derecha
+            iDireccion = 1;
+        }
+        //Si el Usuario presiona la tecla de la Izquierda
+        else if(keyEvent.getKeyCode() == keyEvent.VK_LEFT) {
+            
+            //Has la direccion del Jugador a la derecha
+            iDireccion = 2;
+        }
+        
+        //Si el Usuario presiona la tecla de Disparo
+        if(keyEvent.getKeyCode() == keyEvent.VK_SPACE && bAllowShoot) {
+            
+            bisShooting = true;
+            bAllowShoot = false;
+        }
     }
     
     @Override
     public void keyReleased(KeyEvent keyEvent) {
         
+        //Si el Usuario solto las teclas de Movimiento
+        if(keyEvent.getKeyCode() == keyEvent.VK_RIGHT || 
+                keyEvent.getKeyCode() == keyEvent.VK_LEFT) {
+            
+            //Has su direccion 0, (No movimiento)
+            iDireccion = 0;
+        }
+        
+        if(keyEvent.getKeyCode() == keyEvent.VK_SPACE) {
+            
+            bAllowShoot = true;
+        }
     }
     
     /**
@@ -238,8 +354,45 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
      * @return iWidth es el ancho de la ventana
      */
     public int getWidth() {
+        
         return iWidth;
     }
+    
+    
+    /**
+     * PosInicialJugador
+     * 
+     * Metodo que recibe a el jugador y lo coloca
+     * en su posicion inicial
+     * 
+     */
+    void PosInicialJugador (Base basObj)
+    {
+       basObj.setX( (getWidth()/2) - basObj.getAncho()/2 );
+       basObj.setY( (getHeight() - 100));
+    }
+    
+    /**
+     * CrearDisparo
+     * 
+     * Metodo que Crea y pinta un Objeto Disparo
+     */
+    void CrearDisparo ()
+    {    
+        //Crear el Objeto Disparo
+        basDisparo = new Base (0,0,imaDisparo);
+
+        //Posicionar Disparo
+        basDisparo.setX(basJugador.getX() - 8 + basJugador.getAncho()/2);
+        basDisparo.setY(basJugador.getY() + basJugador.getAlto()/2);
+
+        //Direccionar Disparo
+        //basDisparo.setDispDir(1);
+        
+        //Agregar Disparo a la Lista
+        lklDisparos.addLast(basDisparo);
+    }
+    
     
     /**
      * getHeight
