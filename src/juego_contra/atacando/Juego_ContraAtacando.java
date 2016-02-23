@@ -46,9 +46,22 @@ import java.io.IOException;
 public class Juego_ContraAtacando extends JFrame implements Runnable,
         KeyListener {
     
-    private static int iWidth;
-    private static int iHeight;
-    private int iVidas;
+    private static int iWidth; // Ancho del JFrame
+    private static int iHeight; // Alto del JFrame
+    private int iVidas; // Cantidad de vidas
+    private int iScore; // Cantidad de puntos
+    private Image imaImagenPrincipal; // Imagen del peronsaje principal
+    private Image imaImagenCopos; // Imagen de los copos de nieve
+    // Imagen de los disparos del personaje principal
+    private Image imaImagenDisparo;
+    private Image imaImagenVida1; // Imagen de 1 corazon de vida
+    private Image imaImagenVida2; // Imagen de 2 corazones de vida
+    private Image imaImagenVida3; // Imagen de 3 corazones de vida
+    private Image imaImagenVida4; // Imagen de 4 corazones de vida
+    private Image imaImagenVida5; // Imagen de 5 corazones de vida
+    private Image imaImagenFondo; // Imagen de fondo
+    private SoundClip Derretir; // Sonido de copo de nieve derretido
+    private SoundClip Boom; // Sonido de copo de nieve estrellado en la tierra
     
     /* objetos para manejar el buffer del JFrame y 
        que la imagen no parpadee */
