@@ -47,10 +47,16 @@ import java.util.LinkedList;
 public class Juego_ContraAtacando extends JFrame implements Runnable,
         KeyListener {
     
+    //Medidas del JFrame
     private static int iWidth;
     private static int iHeight;
+    
+    //Vidas del Jugador
     private int iVidas;
-   
+    
+    //Contador de Colisiones con Obstaculos
+    private int iContCol;
+    
     /* objetos para manejar el buffer del JFrame y 
        que la imagen no parpadee */
     private Image    imaImagenJFrame;   // Imagen a proyectar en JFrame
@@ -116,6 +122,9 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
         
         // Empieza con 5 vidas
         iVidas = 5;
+        
+        //Contador de Colisiones con Obstaculos empieza en 0
+        iContCol = 0;
         
         // Dar click en el Applet para poder usar las teclas
         addKeyListener(this);
@@ -271,6 +280,13 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
         //Revisa que los Obstaculos no se salgan del JFrame
         //Si es asi, reposisionalos
         ChecaObstaculosLimites(lklObstaculos);
+        
+        //Revisa la colision de los Disparos con los limites del applet
+        //o la colision con los Obstaculos
+        ChecaColisionDisparos(lklDisparos);
+        
+        //Revisa la colision del Jugador con los Obstaculos
+        ChecaColisionJugador(lklObstaculos);
         
     }
     
@@ -557,9 +573,92 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
                 PosicionaObstaculo(basInstancia);
             }
             
-        }
-            
+        }    
+    }
+    
+    /**
+     * ChecaColisionDisparos
+     * 
+     * Metodo que checa que revisa las colisiones de los disparos
+     * Con los limites del JFrame y con los Obstaculos
+     * 
+     * @param lklLista es la <code> Lista Encadenada</code> de Disparos
+     */
+    void ChecaColisionDisparos (LinkedList lklLista) {
         
+        for(int iI = 0; iI<lklLista.size(); iI++) {
+            
+            //Tomar instancia de Proyectil de la lista
+            Proyectil pylInstancia =  (Proyectil) lklLista.get(iI);
+            
+            //Si el Proyectil se sale del JFrame
+            if(pylInstancia.getX() < 15 || pylInstancia.getX() + 
+                    pylInstancia.getAncho() > getWidth() - 15 || 
+                    pylInstancia.getY() < 30 ) {
+                
+                //Borra el Proyectil
+                lklLista.remove(iI);
+            }
+            
+            //Checar si el Proyectil Choca con algun Obstaculo
+            for(int iJ = 0; iJ<lklObstaculos.size();iJ++) {
+                
+                //Tomar una instancia de la lista de Obstaculos
+                Base basInstancia = (Base) lklObstaculos.get(iJ);
+                
+                //Si una instancia de Proyectil colisiona con una
+                //una instancia de Obstaculo
+                if(pylInstancia.colisiona(basInstancia)) {
+                    
+                    //Reposiciona el Obstaculo
+                    PosicionaObstaculo(basInstancia);
+                    
+                    //Borra el Proyectil
+                    lklLista.remove(iI);
+                   
+                }
+                    
+            }
+        }
+    }
+    
+    
+    
+    /**
+     * ChecaColisionJugador
+     * 
+     * Metodo que revisa la colision del Jugador con los
+     * Con los Obstaculos
+     * 
+     * @param lklLista es la <code> Lista Encadenada</code> de Obstaculos
+     */ 
+    void ChecaColisionJugador (LinkedList lklLista) {
+        
+        for(int iI=0; iI<lklLista.size(); iI++) {
+            
+            Base basInstancia = (Base) lklLista.get(iI);
+            
+            //Si un Obstaculo Choco con el Jugador
+            if(basJugador.colisiona(basInstancia)) {
+                
+                //Reposiciona el Obstaculo
+                PosicionaObstaculo(basInstancia);
+                
+                //Actualiza el Contador de Colisiones
+                iContCol++;
+                
+                //Checa si hay que eliminar una vida
+                if(iContCol>=5) {
+                    
+                    //Reduce Vidas en 1
+                    iVidas--;
+                    
+                    //Resetea Contador
+                    iContCol = 0;
+                    
+                }
+            }
+        }
         
     }
     
