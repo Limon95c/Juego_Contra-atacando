@@ -92,8 +92,6 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
     //Sonido Obstaculo que choca con personaje principal
     private SoundClip Boom;
     
-    //Sonido colision obstaculo con personaje
-    
     //Base de Jugador
     private Base basJugador; // Objeto Base del Jugador Principal
     
