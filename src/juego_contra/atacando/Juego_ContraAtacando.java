@@ -62,6 +62,9 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
     //Imagen del Disparo
     private Image imaDisparo;
     
+    //Imagen del Obstaculo
+    private Image imaObstaculo;
+    
     //Base de Jugador
     private Base basJugador; // Objeto Base del Jugador Principal
     
@@ -70,6 +73,9 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
     
     //Lista de Disparos
     private LinkedList lklDisparos = new LinkedList();
+    
+    //Lista de Obstaculos
+    private LinkedList lklObstaculos = new LinkedList();
     
     //Direccion del Jugador
     private int iDireccion = 0;
@@ -122,11 +128,21 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
         imaDisparo = Toolkit.getDefaultToolkit().getImage(this.getClass().
                getResource("Disparo.gif"));
         
+        //Definir la Imagen de los Obstaculos
+        imaObstaculo = Toolkit.getDefaultToolkit().getImage(this.getClass().
+               getResource("Copo.gif"));
+        
         //Definir el Jugador con su Imagen
         basJugador = new Base (0,0,imaJugador);
         
         //Inicializa Pos del Jugador
        PosInicialJugador(basJugador); 
+       
+       //Crea los Obstaculos
+       CreaObstaculos(lklObstaculos);
+       
+       //Inicializa Pos de los Obstaculos
+       PosicionaTodosObstaculos(lklObstaculos);
         
     }
     
@@ -197,7 +213,7 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
         //Actualiza el Movimiento de los Disparos Existentes
         for(int iI = 0; iI<lklDisparos.size();iI++) {
             
-            //Genera Instancia de Proyectil
+            //Obten Instancia de Proyectil de la Lista
             Proyectil pylInstance = (Proyectil) lklDisparos.get(iI);
             
             //Checa la direccion del Proyectil
@@ -220,6 +236,19 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
                     break;
             }
             
+        }
+        
+        //Actualiza el Movimiento de los Obstaculos Existentes
+        for(int iI = 0; iI<lklObstaculos.size();iI++) {
+            
+            //Obten Instancia de Obstaculo de la Lista
+            Base basInstancia = (Base) lklObstaculos.get(iI);
+            
+            //Altera velocidad cada instante
+            int iVel = (int) (Math.random()*3)+1;
+            
+            //Direcciona la Instancia hacia abajo (Caer)
+            basInstancia.setY(basInstancia.getY()+iVel);
         }
     }
     
@@ -289,7 +318,7 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
                 basJugador.paint(graDibujo,this);
             }
             
-            //Si la Lista no esta vacia
+            //Si la Lista de Disparos no esta vacia
             if(lklDisparos != null) {
                 
                 //Dibuja todos los Disparos
@@ -300,6 +329,21 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
                     
                     //Dibuja la Instancia
                     pylInstancia.paint(graDibujo, this);
+                    
+                }
+            }
+            
+            //Si la Lista de Disparos no esta vacia
+            if(lklObstaculos != null) {
+                
+                //Dibuja todos los Obstaculos
+                for(int iI = 0; iI<lklObstaculos.size();iI++) {
+                    
+                    //Tomar Instancia de la Lista
+                    Base basInstancia = (Base) lklObstaculos.get(iI);
+                    
+                    //Dibuja la Instancia
+                    basInstancia.paint(graDibujo, this);
                     
                 }
             }
@@ -431,6 +475,56 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
         //Agregar Disparo a la Lista
         lklDisparos.addLast(pylDisparo);
     }
+    
+    /**
+     * PosicionaTodosObstaculos
+     * 
+     * Metodo que Posiciona Todos los Obstaculos
+     * @param lklLista Es la <code> Lista Encadenada</code> de Obstaculos
+     */
+    void PosicionaTodosObstaculos (LinkedList lklLista) {
+        
+        for(int iI = 0; iI<lklLista.size(); iI++) {
+            
+            Base basInstancia = (Base) lklLista.get(iI);
+            
+            PosicionaObstaculo(basInstancia);
+        }
+    }
+    
+    /**
+     * PosicionaObstaculo
+     * 
+     * Metodo que Posiciona un Obstaculo
+     * @param basObj Es el <code> Objeto Base</code> a reposicionar
+     */
+    void PosicionaObstaculo (Base basObj) {
+        
+        int iRandomX = (int) (Math.random() * getWidth());
+        
+        basObj.setX(iRandomX);
+        basObj.setY(0);
+    }
+    
+    /**
+     * CreaObstaculos
+     * 
+     * Metodo que crea los Obstaculos y los agrega a la lista encadenada
+     * @param lklLista Es la <code> Lista Encadenada</code> de Obstaculos
+     */
+    void CreaObstaculos (LinkedList lklLista) {
+        
+        int iRandCant = (int) (Math.random() * 6) + 5;
+        
+        for(int iI=0; iI<iRandCant ; iI++) {
+            
+            Base basInstancia = new Base (0,0,imaObstaculo);
+            
+            lklLista.addLast(basInstancia);
+        }
+    }
+    
+    
     
     
     /**
