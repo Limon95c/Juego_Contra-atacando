@@ -50,7 +50,7 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
     private static int iWidth;
     private static int iHeight;
     private int iVidas;
-    
+   
     /* objetos para manejar el buffer del JFrame y 
        que la imagen no parpadee */
     private Image    imaImagenJFrame;   // Imagen a proyectar en JFrame
@@ -65,8 +65,8 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
     //Base de Jugador
     private Base basJugador; // Objeto Base del Jugador Principal
     
-    //Base de Disparo
-    private Base basDisparo; // Objeto Disparo
+    //Proyectil de Disparo
+    private Proyectil pylDisparo; // Objeto Disparo
     
     //Lista de Disparos
     private LinkedList lklDisparos = new LinkedList();
@@ -75,7 +75,6 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
     private int iDireccion = 0;
     
     //Bandera para controlar Disparos
-    private boolean bisShooting = false;
     private boolean bAllowShoot = true;
     
     
@@ -195,23 +194,30 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
             basJugador.setX(basJugador.getX()-3);
         }
         
-        //Si el usuario Disparo
-        if(bisShooting) {
-            
-            //Crea el Disparo
-            CrearDisparo();
-            //Actualiza al Bandera de Disparo
-            bisShooting = false;
-        }
-        
         //Actualiza el Movimiento de los Disparos Existentes
         for(int iI = 0; iI<lklDisparos.size();iI++) {
             
-            Base basInstance = (Base) lklDisparos.get(iI);
+            //Genera Instancia de Proyectil
+            Proyectil pylInstance = (Proyectil) lklDisparos.get(iI);
             
-            if(true /* basInstance.getDispDir()==0*/) {
-              
-                basInstance.setY(basInstance.getY()-2);
+            //Checa la direccion del Proyectil
+            switch (pylInstance.getDireccion()) {
+                case 1:
+                    //Proyectil Derecho
+                    pylInstance.setY(pylInstance.getY()-2);
+                    break;
+                case 2:
+                    //Proyectil 45 grados a la izquierda
+                    pylInstance.setY(pylInstance.getY()-2);
+                    pylInstance.setX(pylInstance.getX()-2);
+                    break;
+                case 3:
+                    //Proyectil 45 grados a la derecha
+                    pylInstance.setY(pylInstance.getY()-2);
+                    pylInstance.setX(pylInstance.getX()+2);
+                    break;
+                default:
+                    break;
             }
             
         }
@@ -290,10 +296,10 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
                 for(int iI = 0; iI<lklDisparos.size();iI++) {
                     
                     //Tomar Instancia de la Lista
-                    Base basInstancia = (Base) lklDisparos.get(iI);
+                    Proyectil pylInstancia = (Proyectil) lklDisparos.get(iI);
                     
                     //Dibuja la Instancia
-                    basInstancia.paint(graDibujo, this);
+                    pylInstancia.paint(graDibujo, this);
                     
                 }
             }
@@ -321,11 +327,39 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
             iDireccion = 2;
         }
         
-        //Si el Usuario presiona la tecla de Disparo
+        //Si el Usuario presiona la tecla de Disparo Vertical y puede disparar
         if(keyEvent.getKeyCode() == keyEvent.VK_SPACE && bAllowShoot) {
-            
-            bisShooting = true;
+                        
+            //Remueve el privilegio para disparar
+            //hasta que el usuario suelte la tecla
             bAllowShoot = false;
+            
+            //Crea el disparo con direccion en Vertical '1'
+            CrearDisparo(1);
+        }
+        
+        //Si el Usuario presiona la tecla de Disparo 45 grados
+        // a la izquierda y puede disparar
+        if(keyEvent.getKeyCode() == keyEvent.VK_A && bAllowShoot) {
+                        
+            //Remueve el privilegio para disparar
+            //hasta que el usuario suelte la tecla
+            bAllowShoot = false;
+            
+            //Crea el disparo con direccion 45 grados a la izquierda '2'
+            CrearDisparo(2);
+        }
+        
+        //Si el Usuario presiona la tecla de Disparo 45 grados
+        // a la derecha y puede disparar
+        if(keyEvent.getKeyCode() == keyEvent.VK_S && bAllowShoot) {
+                        
+            //Remueve el privilegio para disparar
+            //hasta que el usuario suelte la tecla
+            bAllowShoot = false;
+            
+            //Crea el disparo con direccion 45 grados a la izquierda '3'
+            CrearDisparo(3);
         }
     }
     
@@ -340,8 +374,12 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
             iDireccion = 0;
         }
         
-        if(keyEvent.getKeyCode() == keyEvent.VK_SPACE) {
+        //Si el Usuario Solto las teclas de disparo: 'Spacebar' , 'A' , 'S'
+        if(keyEvent.getKeyCode() == keyEvent.VK_SPACE || 
+                keyEvent.getKeyCode() == keyEvent.VK_A ||
+                keyEvent.getKeyCode() == keyEvent.VK_S) {
             
+            //Regresale el privilegio de disparar
             bAllowShoot = true;
         }
     }
@@ -376,21 +414,22 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
      * CrearDisparo
      * 
      * Metodo que Crea y pinta un Objeto Disparo
+     * @param iDir Es la <code> Direccion</code> del Proyectil
      */
-    void CrearDisparo ()
+    void CrearDisparo (int iDir)
     {    
         //Crear el Objeto Disparo
-        basDisparo = new Base (0,0,imaDisparo);
+        pylDisparo = new Proyectil (0,0,imaDisparo,0);
 
         //Posicionar Disparo
-        basDisparo.setX(basJugador.getX() - 8 + basJugador.getAncho()/2);
-        basDisparo.setY(basJugador.getY() + basJugador.getAlto()/2);
+        pylDisparo.setX(basJugador.getX() - 8 + basJugador.getAncho()/2);
+        pylDisparo.setY(basJugador.getY() + basJugador.getAlto()/2);
 
         //Direccionar Disparo
-        //basDisparo.setDispDir(1);
+        pylDisparo.setDireccion(iDir);
         
         //Agregar Disparo a la Lista
-        lklDisparos.addLast(basDisparo);
+        lklDisparos.addLast(pylDisparo);
     }
     
     
