@@ -21,8 +21,8 @@
  * decirle al usuario al pintar el dibujo GameOver.
  *
  * @author Jorge Gonzalez Borboa - Jorge Limón Cabrera
- * @version 0.0
- * @date dd/mm/aa
+ * @version 2.0
+ * @date 24/Febrero/2016
  */
 
 package juego_contra.atacando;
@@ -71,11 +71,11 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
     //Imagen de Jugador
     private Image imaJugador;
     
-    //Imagen del Disparo
-    private Image imaDisparo;
+    //Imagen del Proyectil
+    private Image imaProyectil;
     
     //Imagen del Obstaculo
-    private Image imaObstaculo;
+    private Image imaCopo;
     
     //Imagen del fondo
     private Image imaImagenFondo;
@@ -86,23 +86,23 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
     //Imagen de 1 vida
     private Image imaImagenVida;
     
-    //Sonido Obstaculo derretido
-    private SoundClip Derretir;
+    //Sonido Copo derretido
+    private SoundClip scDerretir;
     
-    //Sonido Obstaculo que choca con personaje principal
-    private SoundClip Boom;
+    //Sonido Copo que choca con personaje principal
+    private SoundClip scBoom;
     
     //Base de Jugador
     private Base basJugador; // Objeto Base del Jugador Principal
     
-    //Proyectil de Disparo
-    private Proyectil pylDisparo; // Objeto Disparo
+    //Proyectil de Proyectil
+    private Proyectil pylProyectil; // Objeto Proyectil
     
-    //Lista de Disparos
+    //Lista de Proyectiles
     private LinkedList lklProyectiles = new LinkedList();
     
     //Lista de Obstaculos
-    private LinkedList lklObstaculos = new LinkedList();
+    private LinkedList lklCopos = new LinkedList();
     
     //Boleano que dice si esta oprimida la flecha izquierda
     private boolean bI = false;
@@ -110,7 +110,7 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
     //Boleano que dice si esta oprimida la flecha derecha
     private boolean bD = false;
     
-    //Bandera para controlar Disparos donde 0 es que nadie acaba de disparar
+    // Entero para controlar Proyectiles donde 0 es que nadie acaba de disparar
     // 1 es que acaba de disparar con A
     // 2 es que acaba de disparar S
     // 3 es que acaba de disparar <Espacio>
@@ -128,6 +128,7 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
         
         // Definir el ancho
         iWidth = 630;
+        
         // Definir el alto
         iHeight = 390;
    
@@ -160,7 +161,7 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
         // Empieza sin pausa
         bPausa = false;
         
-        //Contador de Colisiones con Obstaculos empieza en 0
+        //Contador de Colisiones con Copos empieza en 0
         iContCol = 0;
         
         //Definir la Imagen del Jugador
@@ -171,12 +172,12 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
         imaImagenVida =  Toolkit.getDefaultToolkit().getImage(this.getClass().
                getResource("1Corazon.png"));
         
-        //Definir la Imagen de los Disparos
-        imaDisparo = Toolkit.getDefaultToolkit().getImage(this.getClass().
+        //Definir la Imagen de los Proyectiles
+        imaProyectil = Toolkit.getDefaultToolkit().getImage(this.getClass().
                getResource("Disparo.gif"));
         
         //Definir la Imagen de los Obstaculos
-        imaObstaculo = Toolkit.getDefaultToolkit().getImage(this.getClass().
+        imaCopo = Toolkit.getDefaultToolkit().getImage(this.getClass().
                getResource("Copo.gif"));
         
         //Definir la Imagen del fondo
@@ -188,24 +189,22 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
                getResource("GameOver.png"));
         
         //Definir el Jugador con su Imagen
-        basJugador = new Base (0,0,imaJugador);
+        basJugador = new Base (0, 0, imaJugador);
         
-        //Definir sonido Derretir
-        Derretir = new SoundClip("Bien.wav");
+        //Definir sonido scDerretir
+        scDerretir = new SoundClip("Bien.wav");
         
-        //Definir sonido Boom
-        Boom = new SoundClip("Boom.wav");
+        //Definir sonido scBoom
+        scBoom = new SoundClip("Boom.wav");
         
         //Inicializa Pos del Jugador
         PosInicialJugador(basJugador); 
        
-        //Crea los Obstaculos
-        CreaObstaculos(lklObstaculos);
+        //Crea los Copos
+        CreaCopos(lklCopos);
        
-        //Inicializa Pos de los Obstaculos
-        PosicionaTodosObstaculos(lklObstaculos);
-        
-        
+        //Inicializa Pos de los Copos
+        PosicionaTodosCopos(lklCopos);
     }
     
     /** 
@@ -234,7 +233,6 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
      * 
      */
     public void run() {
-        
         while (iVidas >= 0) {
             // Mientras haya vidas y no este en pausa...
             // actualizar posicion, checar colisiones y pintar.
@@ -268,89 +266,105 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
      */
     public void actualiza(){
         
+        //Actualiza el movimiento del jugador
+        movimientoJugador();
+        
+        //Actualiza el Movimiento de los Proyectiles Existentes
+        for(int iI = 0; iI < lklProyectiles.size(); iI++) {
+            //Obten Instancia de Proyectil de la Lista
+            Proyectil pylInstance = (Proyectil) lklProyectiles.get(iI);
+            //Checa la direccion del Proyectil
+            switch (pylInstance.getDireccion()) {
+                case 1:
+                    //Proyectil Derecho
+                    pylInstance.setY(pylInstance.getY() - 2);
+                    break;
+                case 2:
+                    //Proyectil 45 grados a la izquierda
+                    pylInstance.setY(pylInstance.getY() - 2);
+                    pylInstance.setX(pylInstance.getX() - 2);
+                    break;
+                case 3:
+                    //Proyectil 45 grados a la derecha
+                    pylInstance.setY(pylInstance.getY() - 2);
+                    pylInstance.setX(pylInstance.getX() + 2);
+                    break;
+                default:
+                    break;
+            }
+        }
+        
+        //Actuaiza el movimiento de los copos
+        movimientoCopos();
+    }
+    
+    /** 
+     * movimientoJugador
+     * 
+     * Metodo que actualiza la posicion del jugador
+     * 
+     */
+    public void movimientoJugador() {
         //Si la direccion del personaje es derecha
         if(bD) {
-            
             //Si el Jugador esta dentro del JFrame
             if(basJugador.getX() + basJugador.getAncho() < getWidth() - 8) {
-                
                 //Muevelo a la derecha
                 basJugador.setX(basJugador.getX() + 3);
             }
         }
         //Si la direccion del personaje es izquierda
         else if(bI) {
-            
             //Si el Jugador esta dentro del JFrame
             if(basJugador.getX() > 8) {
                 //Muevelo a la Izquierda
                 basJugador.setX(basJugador.getX() - 3);
             }
         }
-        
-        //Actualiza el Movimiento de los Disparos Existentes
-        for(int iI = 0; iI < lklProyectiles.size(); iI++) {
+    }
+    
+    /** 
+     * movimientoJugador
+     * 
+     * Metodo que actualiza la posicion de los copos
+     * 
+     */
+    public void movimientoCopos() {
+        //Actualiza el Movimiento de los Copos Existentes
+        for(int iI = 0; iI<lklCopos.size(); iI++) {
             
-            //Obten Instancia de Proyectil de la Lista
-            Proyectil pylInstance = (Proyectil) lklProyectiles.get(iI);
-            
-            //Checa la direccion del Proyectil
-            switch (pylInstance.getDireccion()) {
-                case 1:
-                    //Proyectil Derecho
-                    pylInstance.setY(pylInstance.getY()-2);
-                    break;
-                case 2:
-                    //Proyectil 45 grados a la izquierda
-                    pylInstance.setY(pylInstance.getY()-2);
-                    pylInstance.setX(pylInstance.getX()-2);
-                    break;
-                case 3:
-                    //Proyectil 45 grados a la derecha
-                    pylInstance.setY(pylInstance.getY()-2);
-                    pylInstance.setX(pylInstance.getX()+2);
-                    break;
-                default:
-                    break;
-            }
-            
-        }
-        
-        //Actualiza el Movimiento de los Obstaculos Existentes
-        for(int iI = 0; iI<lklObstaculos.size();iI++) {
-            
-            //Obten Instancia de Obstaculo de la Lista
-            Malo malInstancia = (Malo) lklObstaculos.get(iI);
+            //Obten Instancia de Copo de la Lista
+            Malo malInstancia = (Malo) lklCopos.get(iI);
             
             //Altera velocidad cada instante
-            int iVel = (int) (Math.random()*3)+7;
+            int iVel = (int) (Math.random() * 3) + 7;
             
+            //Si el copo no persigue al jugador principal
             if(!malInstancia.siPersigue()) {
                 
                 //Direcciona la Instancia hacia abajo (Caer)
                 //La velocidad depende de las vidas
                 malInstancia.setY(malInstancia.getY()+ iVel - (iVidas));
             }
-            //El malo es de los que persigue
-            else {
+            //El malo es de los copos que persiguen
+            else { // Si si persigue...
                 
                 if(basJugador.getX() - malInstancia.getX() < 0) {
-                    
+                    // Si el jugador esta a la izquierda del copo
                     malInstancia.setX(malInstancia.getX() - (iVel - (iVidas)));
                 }
                 else if(basJugador.getX() - malInstancia.getX() > 0) {
-                    
+                    // Si el jugador esta a la derecha del copo
                     malInstancia.setX(malInstancia.getX() + (iVel - (iVidas)));                  
                 }
                 if(basJugador.getY() - malInstancia.getY() < 0) {
-                    
+                    // Si el jugador esta abajo del copo
                     malInstancia.setY(malInstancia.getY() - (iVel - (iVidas)));
                 }
                 else if(basJugador.getY() - malInstancia.getY() > 0) {
-                    
+                    // Si el jugador esta a arriba del copo
                     malInstancia.setY(malInstancia.getY() + (iVel - (iVidas)));
                 }
-                 
             }
         }
     }
@@ -363,17 +377,16 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
      */
     public void checaColision(){
         
-        //Revisa que los Obstaculos no se salgan del JFrame
+        //Revisa que los Copos no se salgan del JFrame
         //Si es asi, reposisionalos
-        ChecaObstaculosLimites(lklObstaculos);
+        ChecaCoposLimites(lklCopos);
         
-        //Revisa la colision de los Disparos con los limites del applet
+        //Revisa la colision de los Proyectiles con los limites del applet
         //o la colision con los Obstaculos
-        ChecaColisionDisparos(lklProyectiles);
+        ChecaColisionProyectiles(lklProyectiles);
         
-        //Revisa la colision del Jugador con los Obstaculos
-        ChecaColisionJugador(lklObstaculos);
-        
+        //Revisa la colision del Jugador con los Copos
+        ChecaColisionJugador(lklCopos);
     }
     
     /**
@@ -424,70 +437,76 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
      */
     public void paint1(Graphics graDibujo) {
         
-        if(iVidas > 0) {
-            
-            if (imaImagenFondo != null) {
-                // Dibuja la imagen de fondo
-                graDibujo.drawImage(imaImagenFondo, 0, 0, getWidth(),
-                        getHeight(), this);
-                if(imaImagenVida != null) {
-                    for(int iI = 0; iI < iVidas; iI++) {
-                        // Dibuja la cantidad de vidas que hay
-                        graDibujo.drawImage(imaImagenVida,
-                        15 + (imaImagenVida.getWidth(this) + 1) * iI, 35,
-                        imaImagenVida.getWidth(this),
-                        imaImagenVida.getHeight(this), this);
-                    }
-                }
-                graDibujo.setColor(Color.white);
-                graDibujo.drawString("Score: " + iScore, 15, 80);
-            } // si no se ha cargado se dibuja un mensaje
-            else {
-                    //Da un mensaje mientras se carga el dibujo	
-                    graDibujo.drawString("No se cargo la imagen..", 40, 40);
-            }
-            
-            if(basJugador != null) {
-                
-                //Dibuja al Principal
-                basJugador.paint(graDibujo,this);
-            }
-            
-            //Si la Lista de Disparos no esta vacia
+        if(iVidas > 0) { //Si sigue el juego...
+            //Dibujar fondo con las vidas y el jugador
+            dibujaFondoYJugador(graDibujo);
+            //Si la Lista de Proyectiles no esta vacia
             if(lklProyectiles != null) {
-                
-                //Dibuja todos los Disparos
-                for(int iI = 0; iI<lklProyectiles.size();iI++) {
-                    
+                //Dibuja todos los Proyectiles
+                for(int iI = 0; iI<lklProyectiles.size(); iI++) {
                     //Tomar Instancia de la Lista
                     Proyectil pylInstancia = (Proyectil) lklProyectiles.get(iI);
-                    
                     //Dibuja la Instancia
                     pylInstancia.paint(graDibujo, this);
-                    
                 }
             }
             
-            //Si la Lista de Disparos no esta vacia
-            if(lklObstaculos != null) {
-                
-                //Dibuja todos los Obstaculos
-                for(int iI = 0; iI<lklObstaculos.size();iI++) {
-                    
+            //Si la Lista de Proyectiles no esta vacia
+            if(lklCopos != null) {   
+                //Dibuja todos los Copos
+                for(int iI = 0; iI<lklCopos.size(); iI++) {
                     //Tomar Instancia de la Lista
-                    Base basInstancia = (Base) lklObstaculos.get(iI);
-                    
+                    Base basInstancia = (Base) lklCopos.get(iI);
                     //Dibuja la Instancia
                     basInstancia.paint(graDibujo, this);
-                    
                 }
             }       
         }
-        else if(iVidas == 0){
-            if(imaGameOver != null)
-            // Dibuja la imagen de fondo
+        else if(iVidas == 0){ //Si ya termino el juego...
+            if(imaGameOver != null) { // Si ya se cargo la imagen de game over...
+            // Dibuja la imagen de game over
             graDibujo.drawImage(imaGameOver, 0, 0, getWidth(),
                     getHeight(), this);
+            }
+        }
+    }
+    
+    /**
+     * dibujaFondoYJugador
+     * 
+     * Dibuja el fondo, las imagenes de las vidas, el score y el jugador
+     * 
+     * @param graDibujo es el objeto de <code>Graphics</code> usado para
+     * dibujar.
+     * 
+     */
+    public void dibujaFondoYJugador(Graphics graDibujo) {
+        if (imaImagenFondo != null) { // Si ya se cargo el fondo
+            
+            // Dibuja la imagen de fondo
+            graDibujo.drawImage(imaImagenFondo, 0, 0, getWidth(),
+                    getHeight(), this); // Dibujar el fondo
+            if(imaImagenVida != null) { // Si ya se cargaron las vidas
+                for(int iI = 0; iI < iVidas; iI++) {
+                    // Dibuja la cantidad de vidas que hay 
+                    graDibujo.drawImage(imaImagenVida,
+                    15 + (imaImagenVida.getWidth(this) + 1) * iI, 35,
+                    imaImagenVida.getWidth(this),
+                    imaImagenVida.getHeight(this), this);
+                }
+            }
+            graDibujo.setColor(Color.white); //Letras en color blanco
+            //Dibujar Score
+            graDibujo.drawString("Score: " + iScore, 15, 80);
+        } 
+        else { // si no se ha cargado se dibuja un mensaje
+            //Da un mensaje mientras se carga el dibujo	
+            graDibujo.drawString("No se cargo la imagen..", 40, 40);
+        }
+            
+        if(basJugador != null) { // Si ya se cargo el Jugador
+            //Dibuja al Principal
+            basJugador.paint(graDibujo,this);
         }
     }
     
@@ -497,61 +516,64 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
 
     @Override
     public void keyPressed(KeyEvent keyEvent) {
+        
         if(iVidas > 0) {
+            
             //Si el Usuario presiona la tecla Derecha
-            if(keyEvent.getKeyCode() == KeyEvent.VK_RIGHT ) 
-            {
+            if(keyEvent.getKeyCode() == KeyEvent.VK_RIGHT) {
                 bI = false; // Desactivar izquierda
                 bD = true; // Activar derecha
             }
+            
             //Si el Usuario presiona la tecla de la Izquierda
             if(keyEvent.getKeyCode() == KeyEvent.VK_LEFT) {
-
                 bD = false; // Desactivar derecha
                 bI = true; // Activar izquierda
             }
-            if(!bPausa) {
-                //Si el Usuario presiona la tecla de Disparo Vertical
-                //y puede disparar
-                if(keyEvent.getKeyCode() == KeyEvent.VK_SPACE &&
-                        iJustShoot != 3) {
-                    //Remueve el privilegio para disparar
-                    //hasta que el usuario suelte las teclas o le pique a otro
-                    iJustShoot = 3;
-
-                    //Crea el disparo con direccion en Vertical '1'
-                    CrearDisparo(1);
-                }
-
-                //Si el Usuario presiona la tecla de Disparo 45 grados
-                // a la izquierda y puede disparar
-                if(keyEvent.getKeyCode() == KeyEvent.VK_A && iJustShoot != 1) {
-
-                    //Remueve el privilegio para disparar
-                    //hasta que el usuario suelte las teclas o le pique a otro
-                    iJustShoot = 1;
-
-                    //Crea el disparo con direccion 45 grados a la izquierda '2'
-                    CrearDisparo(2);
-                }
-
-                //Si el Usuario presiona la tecla de Disparo 45 grados
-                // a la derecha y puede disparar
-                if(keyEvent.getKeyCode() == KeyEvent.VK_S && iJustShoot != 2) {
-
-                    //Remueve el privilegio para disparar
-                    //hasta que el usuario suelte las teclas o le pique a otro
-                    iJustShoot = 2;
-
-                    //Crea el disparo con direccion 45 grados a la izquierda '3'
-                    CrearDisparo(3);
-                }
+            
+            if(!bPausa) { //Si no esta en pausa el juego
+                //Puede crear proyectiles
+                dispararProyectiles(keyEvent);
             }
         }
+        
         if(iVidas == 0) { // Si no hay vidas solo sirve la tecla reinicio
             if(keyEvent.getKeyCode() == KeyEvent.VK_R) {
-                init();
+                init(); //Reiniciar valores
             }
+        }
+    }
+    
+    public void dispararProyectiles(KeyEvent keyEvent) {
+        //Si el Usuario presiona la tecla de Proyectil Vertical
+        //y no acaba de disparar
+        if(keyEvent.getKeyCode() == KeyEvent.VK_SPACE &&
+                        iJustShoot != 3) {
+            //Remueve el privilegio para disparar
+            //hasta que el usuario suelte las teclas o le pique a otro
+            iJustShoot = 3;
+            //Crea el disparo con direccion en Vertical '1'
+            CrearProyectil(1);
+        }
+                
+        //Si el Usuario presiona la tecla de Proyectil 45 grados
+        //y no acaba de disparar
+        if(keyEvent.getKeyCode() == KeyEvent.VK_A && iJustShoot != 1) {
+            //Remueve el privilegio para disparar
+            //hasta que el usuario suelte las teclas o le pique a otro
+            iJustShoot = 1;
+            //Crea el disparo con direccion 45 grados a la izquierda '2'
+            CrearProyectil(2);
+        }
+
+        //Si el Usuario presiona la tecla de Proyectil 45 grados
+        //y no acaba de disparar
+        if(keyEvent.getKeyCode() == KeyEvent.VK_S && iJustShoot != 2) {
+            //Remueve el privilegio para disparar
+            //hasta que el usuario suelte las teclas o le pique a otro
+            iJustShoot = 2;
+            //Crea el disparo con direccion 45 grados a la izquierda '3'
+            CrearProyectil(3);
         }
     }
     
@@ -562,35 +584,37 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
         if(keyEvent.getKeyCode() == KeyEvent.VK_P) {
             bPausa = !bPausa;
         }
+        
         //Si el Usuario solto las teclas de Movimiento
         if(keyEvent.getKeyCode() == KeyEvent.VK_RIGHT) {
             // Desactiva derecha
             bD = false;
         }
+        
         if(keyEvent.getKeyCode() == KeyEvent.VK_LEFT) {
             // Desactiva izquierda
             bI = false;
         }
+        
         if(!bPausa) { // Generar disparos si no esta en pausa
+            
             if(keyEvent.getKeyCode() == KeyEvent.VK_SPACE && iJustShoot == 3) {
                 //Remueve el privilegio para disparar
                 //hasta que el usuario suelte las teclas o le pique a otro
                 iJustShoot = 0;
             }
 
-            //Si el Usuario presiona la tecla de Disparo 45 grados
+            //Si el Usuario presiona la tecla de Proyectil 45 grados
             // a la izquierda y puede disparar
             if(keyEvent.getKeyCode() == KeyEvent.VK_A && iJustShoot == 1) {
-
                 //Remueve el privilegio para disparar
                 //hasta que el usuario suelte las teclas o le pique a otro
                 iJustShoot = 0;
             }
 
-            //Si el Usuario presiona la tecla de Disparo 45 grados
+            //Si el Usuario presiona la tecla de Proyectil 45 grados
             // a la derecha y puede disparar
             if(keyEvent.getKeyCode() == KeyEvent.VK_S && iJustShoot == 2) {
-
                 //Remueve el privilegio para disparar
                 //hasta que el usuario suelte las teclas o le pique a otro
                 iJustShoot = 0;
@@ -605,8 +629,7 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
      * 
      * @return iWidth es el ancho de la ventana
      */
-    public int getWidth() {
-        
+    public int getWidth() {        
         return iWidth;
     }
     
@@ -618,166 +641,156 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
      * en su posicion inicial
      * 
      */
-    void PosInicialJugador (Base basObj)
-    {
-       basObj.setX( (getWidth()/2) - basObj.getAncho()/2 );
-       basObj.setY( (getHeight() - 100));
+    public void PosInicialJugador (Base basObj) {
+        // Ubicar jugador en medio de la pantalla y un poco hacia abajo
+        basObj.setX( (getWidth()/2) - basObj.getAncho()/2 );
+        basObj.setY( (getHeight() - 100));
     }
     
     /**
-     * CrearDisparo
+     * CrearProyectil
      * 
-     * Metodo que Crea y pinta un Objeto Disparo
+     * Metodo que Crea y pinta un Objeto Proyectil
      * @param iDir Es la <code> Direccion</code> del Proyectil
      */
-    void CrearDisparo (int iDir)
-    {    
-        //Crear el Objeto Disparo
-        pylDisparo = new Proyectil (0,0,imaDisparo,0);
+    public void CrearProyectil (int iDir) {    
+        //Crear el Objeto Proyectil
+        pylProyectil = new Proyectil (0,0,imaProyectil,0);
 
-        //Posicionar Disparo
-        pylDisparo.setX(basJugador.getX() - 8 + basJugador.getAncho()/2);
-        pylDisparo.setY(basJugador.getY() + basJugador.getAlto()/2);
+        //Posicionar Proyectil
+        pylProyectil.setX(basJugador.getX() - 8 + basJugador.getAncho()/2);
+        pylProyectil.setY(basJugador.getY() + basJugador.getAlto()/2);
 
-        //Direccionar Disparo
-        pylDisparo.setDireccion(iDir);
+        //Direccionar Proyectil
+        pylProyectil.setDireccion(iDir);
         
-        //Agregar Disparo a la Lista
-        lklProyectiles.addLast(pylDisparo);
+        //Agregar Proyectil a la Lista
+        lklProyectiles.addLast(pylProyectil);
     }
     
     /**
-     * PosicionaTodosProyectiles
+     * PosicionaTodosCopos
      * 
-     * Metodo que Posiciona Todos los Proyectiles
-     * @param lklProyectiles Es la <code> Lista Encadenada</code> de proyectiles
+     * Metodo que Posiciona Todos los Copos
+     * @param lklProyectiles Es la <code> Lista Encadenada</code> de Copos
+     * 
      */
-    void PosicionaTodosObstaculos (LinkedList lklScan) {
-        
+    public void PosicionaTodosCopos (LinkedList lklScan) {
+        //Para todos los copos existentes
         for(int iI = 0; iI < lklScan.size(); iI++) {
-            
             Base basInstancia = (Base) lklScan.get(iI);
-            
-            PosicionaObstaculo(basInstancia);
+            // Posicionar el copo
+            PosicionaCopo(basInstancia);
         }
     }
     
     /**
-     * PosicionaObstaculo
+     * PosicionaCopo
      * 
-     * Metodo que Posiciona un Obstaculo
+     * Metodo que Posiciona un Copo
      * @param basObj Es el <code> Objeto Base</code> a reposicionar
+     * 
      */
-    void PosicionaObstaculo (Base basObj) {
-        
-        int iRandomX = (int) (40 + Math.random() * (getWidth() - 80));
-        
-        basObj.setX(iRandomX);
+    public void PosicionaCopo (Base basObj) {
+        // Ubicar el copo arriba de la pantalla y con una separacion razonable
+        basObj.setX((int) (40 + Math.random() * (getWidth() - 80)));
         basObj.setY((int)(0 - Math.random() * getHeight()));
     }
     
     /**
-     * CreaObstaculos
+     * CreaCopos
      * 
-     * Metodo que crea los Obstaculos y los agrega a la lista encadenada
-     * @param lklProyectiles Es la <code> Lista Encadenada</code> de Obstaculos
+     * Metodo que crea los Copos y los agrega a la lista encadenada
+     * @param lklProyectiles Es la <code> Lista Encadenada</code> de Copos
+     * 
      */
-    void CreaObstaculos (LinkedList lklScan) {
-        
+    public void CreaCopos (LinkedList lklScan) {
+        // Obtener cantidad de copos
         int iRandCant = (int) (Math.random() * 6) + 10;
-        
+        // Obtener cantidad de copos que persiguen
         int iPersiguenCant = (int) (iRandCant * 0.1);
-        
+        // Restar los que persiguen a los que no
         iRandCant -= iPersiguenCant;
-        
+         
         for(int iI=0; iI < iRandCant; iI++) {
-            
-            Malo malInstancia = new Malo (0,0,imaObstaculo,false);
+            // Crear copos normales
+            Malo malInstancia = new Malo (0,0,imaCopo,false);
             lklScan.addLast(malInstancia);
         }
         
         for(int iI=0; iI<iPersiguenCant;iI++) {
-            
-            Malo malInstancia = new Malo (0,0,imaObstaculo,true);
+            // Crear copos que persiguen
+            Malo malInstancia = new Malo (0,0,imaCopo,true);
             lklScan.addLast(malInstancia);
         }
     }
     
     /**
-     * ChecaObstaculosLimites
+     * ChecaCoposLimites
      * 
-     * Metodo que checa que los obstaculos no se salgan del Jframe
-     * @param lklProyectiles es la <code> Lista Encadenada</code> de Obstaculos
+     * Metodo que checa que los Copos no se salgan del Jframe
+     * @param lklProyectiles es la <code> Lista Encadenada</code> de Copos
+     * 
      */
-    void ChecaObstaculosLimites (LinkedList lklProyectiles) {
+    public void ChecaCoposLimites (LinkedList lklScan) {
         
-        //Checar todos los Obstaculos de la lista
-        for(int iI=0; iI<lklProyectiles.size();iI++) {
-            
+        //Checar todos los Copos de la lista
+        for(int iI=0; iI<lklScan.size(); iI++) {
             //Toma una instancia de la lista
-            Base basInstancia = (Base) lklProyectiles.get(iI);
+            Base basInstancia = (Base) lklScan.get(iI);
             
-            //Checar que la Instancia de Obstaculo no haya llegado al fondo
+            //Checar que la Instancia de Copo no haya llegado al fondo
             if(basInstancia.getY()>getHeight()) {
-                
                 //Si llego al fondo, reposicionala
-                PosicionaObstaculo(basInstancia);
+                PosicionaCopo(basInstancia);
             }
             
         }    
     }
     
     /**
-     * ChecaColisionDisparos
+     * ChecaColisionProyectiles
      * 
      * Metodo que checa que revisa las colisiones de los disparos
      * Con los limites del JFrame y con los Obstaculos
      * 
-     * @param lklProyectiles es la <code> Lista Encadenada</code> de Disparos
+     * @param lklProyectiles es la <code> Lista Encadenada</code> de Proyectiles
+     * 
      */
-    void ChecaColisionDisparos (LinkedList lklProyectiles) {
+    public void ChecaColisionProyectiles (LinkedList lklScan) {
         
-        for(int iI = 0; iI<lklProyectiles.size(); iI++) {
-            
+        for(int iI = 0; iI<lklScan.size(); iI++) {
             //Tomar instancia de Proyectil de la lista
-            Proyectil pylInstancia =  (Proyectil) lklProyectiles.get(iI);
+            Proyectil pylInstancia =  (Proyectil) lklScan.get(iI);
             
             //Si el Proyectil se sale del JFrame
-            if(pylInstancia.getX() < 0 ||
-                    pylInstancia.getX() > getWidth() || 
-                    pylInstancia.getY() < 0 ) {
+            if(pylInstancia.getX() < 0 || pylInstancia.getX() > getWidth() || 
+                pylInstancia.getY() < 0 ) {
                 
                 //Borra el Proyectil
-                lklProyectiles.remove(iI);
+                lklScan.remove(iI);
             }
             
-            //Checar si el Proyectil Choca con algun Obstaculo
-            for(int iJ = 0; iJ < lklObstaculos.size(); iJ++) {
-                
+            //Checar si el Proyectil Choca con algun Copo
+            for(int iJ = 0; iJ < lklCopos.size(); iJ++) {
                 //Tomar una instancia de la lista de Obstaculos
-                Base basInstancia = (Base) lklObstaculos.get(iJ);
-                
+                Base basInstancia = (Base) lklCopos.get(iJ);
+            
                 //Si una instancia de Proyectil colisiona con una
-                //una instancia de Obstaculo
+                //una instancia de Copo
                 if(pylInstancia.colisiona(basInstancia)) {
-                    
-                    //Reposiciona el Obstaculo
-                    PosicionaObstaculo(basInstancia);
-                    
+                    //Reposiciona el Copo
+                    PosicionaCopo(basInstancia);
                     //Borra el Proyectil
-                    lklProyectiles.remove(iI);
-                   
+                    lklScan.remove(iI);
                     //Ganas 10 puntos
                     iScore += 10;
-                    
                     //Reproduce sonido
-                    Derretir.play();
-                }
-                    
+                    scDerretir.play();
+                }    
             }
         }
-    }
-    
+    }    
     
     
     /**
@@ -786,41 +799,35 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
      * Metodo que revisa la colision del Jugador con los
      * Con los Obstaculos
      * 
-     * @param lklProyectiles es la <code> Lista Encadenada</code> de Obstaculos
+     * @param lklProyectiles es la <code> Lista Encadenada</code> de Copos
+     * 
      */ 
-    void ChecaColisionJugador (LinkedList lklProyectiles) {
+    public void ChecaColisionJugador (LinkedList lklScan) {
         
-        for(int iI=0; iI < lklProyectiles.size(); iI++) {
+        for(int iI=0; iI < lklScan.size(); iI++) {            
+            Base basInstancia = (Base) lklScan.get(iI);
             
-            Base basInstancia = (Base) lklProyectiles.get(iI);
-            
-            //Si un Obstaculo Choco con el Jugador
-            if(basJugador.colisiona(basInstancia)) {
-                
+            //Si un Copo Choco con el Jugador
+            if(basJugador.colisiona(basInstancia)) {                
                 //Reposiciona el Obstaculo
-                PosicionaObstaculo(basInstancia);
-                
+                PosicionaCopo(basInstancia);                
                 //Actualiza el Contador de Colisiones
-                iContCol++;
-                
+                iContCol++;                
                 //Checa si hay que eliminar una vida
-                if(iContCol>=5) {
-                    
+                
+                if(iContCol>=5) {                    
                     //Reduce Vidas en 1
-                    iVidas--;
-                    
+                    iVidas--;                    
                     //Resetea Contador
                     iContCol = 0;
                 }
                 
                 // Pierde 1 punto
-                iScore--;
-                
+                iScore--;                
                 // Reproducir sonido
-                Boom.play();
+                scBoom.play();
             }
         }
-        
     }
     
     /**
@@ -829,6 +836,7 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
      * Metodo de acceso para la variable iHeight
      * 
      * @return iHeight es el alto de la ventana
+     * 
      */
     public int getHeight() {
         return iHeight;
@@ -846,6 +854,5 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
         Juego_ContraAtacando.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         // Hace visible el JFrame
         Juego_ContraAtacando.setVisible(true);
-    }
-    
+    }    
 }
