@@ -204,6 +204,8 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
        
         //Inicializa Pos de los Obstaculos
         PosicionaTodosObstaculos(lklObstaculos);
+        
+        
     }
     
     /** 
@@ -318,14 +320,38 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
         for(int iI = 0; iI<lklObstaculos.size();iI++) {
             
             //Obten Instancia de Obstaculo de la Lista
-            Base basInstancia = (Base) lklObstaculos.get(iI);
+            Malo malInstancia = (Malo) lklObstaculos.get(iI);
             
             //Altera velocidad cada instante
             int iVel = (int) (Math.random()*3)+7;
             
-            //Direcciona la Instancia hacia abajo (Caer)
-            //La velocidad depende de las vidas
-            basInstancia.setY(basInstancia.getY()+iVel - (iVidas));
+            if(!malInstancia.siPersigue()) {
+                
+                //Direcciona la Instancia hacia abajo (Caer)
+                //La velocidad depende de las vidas
+                malInstancia.setY(malInstancia.getY()+ iVel - (iVidas));
+            }
+            //El malo es de los que persigue
+            else {
+                
+                if(basJugador.getX() - malInstancia.getX() < 0) {
+                    
+                    malInstancia.setX(malInstancia.getX() - (iVel - (iVidas)));
+                }
+                else if(basJugador.getX() - malInstancia.getX() > 0) {
+                    
+                    malInstancia.setX(malInstancia.getX() + (iVel - (iVidas)));                  
+                }
+                if(basJugador.getY() - malInstancia.getY() < 0) {
+                    
+                    malInstancia.setY(malInstancia.getY() - (iVel - (iVidas)));
+                }
+                else if(basJugador.getY() - malInstancia.getY() > 0) {
+                    
+                    malInstancia.setY(malInstancia.getY() + (iVel - (iVidas)));
+                }
+                 
+            }
         }
     }
     
@@ -660,9 +686,20 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
         
         int iRandCant = (int) (Math.random() * 6) + 10;
         
+        int iPersiguenCant = (int) (iRandCant * 0.1);
+        
+        iRandCant -= iPersiguenCant;
+        
         for(int iI=0; iI < iRandCant; iI++) {
-            Base basInstancia = new Base (0,0,imaObstaculo);
-            lklScan.addLast(basInstancia);
+            
+            Malo malInstancia = new Malo (0,0,imaObstaculo,false);
+            lklScan.addLast(malInstancia);
+        }
+        
+        for(int iI=0; iI<iPersiguenCant;iI++) {
+            
+            Malo malInstancia = new Malo (0,0,imaObstaculo,true);
+            lklScan.addLast(malInstancia);
         }
     }
     
