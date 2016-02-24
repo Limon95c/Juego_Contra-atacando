@@ -200,14 +200,21 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
         //Si la direccion del personaje es 1->Derecha
         if(iDireccion == 1) {
             
-            //Muevelo a la derecha
-            basJugador.setX(basJugador.getX()+3);
+            //Si el Jugador esta dentro del JFrame
+            if(basJugador.getX() + basJugador.getAncho() < getWidth()-8) {
+                
+                //Muevelo a la derecha
+                basJugador.setX(basJugador.getX()+3);
+            }
         }
         //Si la direccion del personaje es 2->Izquierda
         else if(iDireccion == 2) {
             
-            //Muevelo a la Izquierda
-            basJugador.setX(basJugador.getX()-3);
+            //Si el Jugador esta dentro del JFrame
+            if(basJugador.getX()>8) {
+                //Muevelo a la Izquierda
+                basJugador.setX(basJugador.getX()-3);
+            }
         }
         
         //Actualiza el Movimiento de los Disparos Existentes
@@ -245,10 +252,11 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
             Base basInstancia = (Base) lklObstaculos.get(iI);
             
             //Altera velocidad cada instante
-            int iVel = (int) (Math.random()*3)+1;
+            int iVel = (int) (Math.random()*3)+7;
             
             //Direcciona la Instancia hacia abajo (Caer)
-            basInstancia.setY(basInstancia.getY()+iVel);
+            //La velocidad depende de las vidas
+            basInstancia.setY(basInstancia.getY()+iVel - (iVidas));
         }
     }
     
@@ -259,6 +267,10 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
      * 
      */
     public void checaColision(){
+        
+        //Revisa que los Obstaculos no se salgan del JFrame
+        //Si es asi, reposisionalos
+        ChecaObstaculosLimites(lklObstaculos);
         
     }
     
@@ -524,8 +536,32 @@ public class Juego_ContraAtacando extends JFrame implements Runnable,
         }
     }
     
-    
-    
+    /**
+     * ChecaObstaculosLimites
+     * 
+     * Metodo que checa que los obstaculos no se salgan del Jframe
+     * @param lklLista es la <code> Lista Encadenada</code> de Obstaculos
+     */
+    void ChecaObstaculosLimites (LinkedList lklLista) {
+        
+        //Checar todos los Obstaculos de la lista
+        for(int iI=0; iI<lklLista.size();iI++) {
+            
+            //Toma una instancia de la lista
+            Base basInstancia = (Base) lklLista.get(iI);
+            
+            //Checar que la Instancia de Obstaculo no haya llegado al fondo
+            if(basInstancia.getY()>getHeight()) {
+                
+                //Si llego al fondo, reposicionala
+                PosicionaObstaculo(basInstancia);
+            }
+            
+        }
+            
+        
+        
+    }
     
     /**
      * getHeight
